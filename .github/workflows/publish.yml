@@ -1,0 +1,97 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      semanticVersion:
+        description: 'Semantic version (Major.Minor.Patch, e.g. 1.0.0)'
+        required: true
+        type: string
+
+# Permissions needed for pushing tags and creating releases
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Validate semantic version
+      id: validate_version
+      run: |
+        SEMANTIC_VERSION="${{ github.event.inputs.semanticVersion }}"
+        BUILD_NUMBER=${{ github.run_number }}
+        
+        # Validate that semantic version is provided and in correct format
+        if [ -z "$SEMANTIC_VERSION" ]; then
+          echo "ERROR: Semantic version is required"
+          echo "Please provide a version in format: Major.Minor.Patch (e.g. 1.0.0)"
+          exit 1
+        fi
+        
+        # Validate semantic version format
+        if ! [[ $SEMANTIC_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "ERROR: Invalid semantic version format: $SEMANTIC_VERSION"
+          echo "Version must be in format: Major.Minor.Patch (e.g. 1.0.0)"
+          exit 1
+        fi
+        
+        # Set the full version with build number
+        VERSION="${SEMANTIC_VERSION}.${BUILD_NUMBER}"
+        echo "Using version: $VERSION"
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+    
+    - name: Setup Git
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+    
+    - name: Update version in project file
+      run: |
+        sed -i "s/<Version>[0-9]\+\.[0-9]\+\.[0-9]\+.*<\/Version>/<Version>${{ env.VERSION }}<\/Version>/g" src/MicroAPI/MicroAPI.csproj
+        git add src/MicroAPI/MicroAPI.csproj
+        git commit -m "chore: bump version to ${{ env.VERSION }}"
+    
+    - name: Create tag
+      run: |
+        git tag -a "v${{ env.VERSION }}" -m "Release v${{ env.VERSION }}"
+        git push origin "v${{ env.VERSION }}"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Restore dependencies
+      run: dotnet restore src/MicroAPI/MicroAPI.csproj
+    
+    - name: Build
+      run: dotnet build src/MicroAPI/MicroAPI.csproj --configuration Release --no-restore
+    
+    - name: Pack
+      run: dotnet pack src/MicroAPI/MicroAPI.csproj --configuration Release --no-build --output ./nupkgs
+    
+    - name: Push to NuGet
+      run: dotnet nuget push "./nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: "v${{ env.VERSION }}"
+        tag_name: "v${{ env.VERSION }}"
+        files: "./nupkgs/*.nupkg"
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
