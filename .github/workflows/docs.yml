@@ -34,37 +34,140 @@ jobs:
     - name: Install DocFX
       run: dotnet tool install -g docfx
     
-    - name: Create DocFX project
+    - name: Copy documentation files
       run: |
         mkdir -p docs
-        cd docs
-        docfx init -q
+        
+        # Copy documentation files
+        cp README.md docs/
+        cp README-zh-cn.md docs/
+        cp CONTRIBUTING.md docs/
+        
+        # Create main TOC
+        cat > docs/toc.yml << EOF
+        - name: Home
+          href: index.md
+        - name: API Documentation
+          href: api/
+        - name: README (Chinese)
+          href: README-zh-cn.md
+        - name: README
+          href: README.md
+        - name: Contributing
+          href: CONTRIBUTING.md
+        EOF
     
     - name: Configure DocFX
       run: |
-        # Update docfx.json to include the project
-        sed -i 's/"src": \[\]/"src": \[{"src": "..\/src", "files": \["**\/*.cs", "**\/*.csproj"\], "exclude": \["**/bin/**", "**/obj/**"\]}\]/' docs/docfx.json
-        sed -i 's/"dest": "_site\/api"/"dest": "_site\/api", "disableGitFeatures": false, "disableDefaultFilter": false/' docs/docfx.json
-        
-        # Update the site name and other metadata
-        sed -i 's/"_appTitle": "docfx-seed"/"_appTitle": "MicroAPI.Net"/' docs/docfx.json
-        sed -i 's/"_appFooter": ""/"_appFooter": "MicroAPI.Net Documentation"/' docs/docfx.json
+        cat > docs/docfx.json << EOF
+        {
+          "metadata": [
+            {
+              "src": [
+                {
+                  "src": "../src",
+                  "files": [
+                    "**/MicroAPI.csproj"
+                  ],
+                  "exclude": [
+                    "**/bin/**",
+                    "**/obj/**",
+                    "**/MicroAPI.Sample/**"
+                  ]
+                }
+              ],
+              "dest": "api",
+              "disableGitFeatures": false,
+              "disableDefaultFilter": false
+            }
+          ],
+          "build": {
+            "content": [
+              {
+                "files": [
+                  "api/**.yml",
+                  "api/index.md"
+                ]
+              },
+              {
+                "files": [
+                  "toc.yml",
+                  "*.md"
+                ],
+                "exclude": [
+                  "obj/**",
+                  "_site/**"
+                ]
+              }
+            ],
+            "resource": [
+              {
+                "files": [
+                  "images/**"
+                ],
+                "exclude": [
+                  "obj/**",
+                  "_site/**"
+                ]
+              }
+            ],
+            "overwrite": [
+              {
+                "files": [
+                  "apidoc/**.md"
+                ],
+                "exclude": [
+                  "obj/**",
+                  "_site/**"
+                ]
+              }
+            ],
+            "dest": "_site",
+            "globalMetadataFiles": [],
+            "fileMetadataFiles": [],
+            "template": [
+              "default",
+              "templates/material"
+            ],
+            "postProcessors": [],
+            "markdownEngineName": "markdig",
+            "noLangKeyword": false,
+            "keepFileLink": false,
+            "cleanupCacheHistory": false,
+            "disableGitFeatures": false,
+            "globalMetadata": {
+              "_appTitle": "MicroAPI.Net",
+              "_appFooter": "MicroAPI.Net Documentation",
+              "_enableSearch": true,
+              "_enableNewTab": true,
+              "_gitContribute": {
+                "repo": "https://github.com/XmmShp/MicroApi.Net",
+                "branch": "main"
+              }
+            }
+          }
+        }
+        EOF
         
         # Create index.md
-        cat > docs/index.md << EOF
-        # MicroAPI.Net Documentation
+        cp README.md docs/index.md
+
+        mkdir -p docs/api
+        # Create api/index.md
+        cat > docs/api/index.md << EOF
+        # MicroAPI.Net API Documentation
         
         Welcome to the MicroAPI.Net API documentation. This documentation is automatically generated from the source code.
         
         ## Getting Started
         
-        For more information, please visit the [GitHub repository](https://github.com/XmmShp/MicroAPI).
+        For more information, please visit the [GitHub repository](https://github.com/XmmShp/MicroApi.Net).
         EOF
     
     - name: Build Documentation
       run: |
         cd docs
-        docfx build
+        docfx docfx.json
     
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
