@@ -28,10 +28,10 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
     
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/MicroAPI/MicroAPI.csproj
     
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build src/MicroAPI/MicroAPI.csproj --configuration Release --no-restore
 
   publish:
     needs: build
@@ -92,13 +92,13 @@ jobs:
         git push
     
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/MicroAPI/MicroAPI.csproj
     
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build src/MicroAPI/MicroAPI.csproj --configuration Release --no-restore
     
     - name: Pack
-      run: dotnet pack --configuration Release --no-build --output ./nupkgs
+      run: dotnet pack src/MicroAPI/MicroAPI.csproj --configuration Release --no-build --output ./nupkgs
     
     - name: Push to NuGet
       run: dotnet nuget push "./nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
