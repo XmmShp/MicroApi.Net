@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Contributing Guidelines / 贡献指南 | MicroAPI.Net </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Contributing Guidelines / 贡献指南 | MicroAPI.Net ">
+    
+    
+      <link rel="shortcut icon" href="favicon.ico">
+      <link rel="stylesheet" href="styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="styles/docfx.css">
+      <link rel="stylesheet" href="styles/main.css">
+      <meta property="docfx:navrel" content="toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="">
+    <meta property="docfx:newtab" content="true">
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="index.html">
+                <img id="logo" class="svg" src="logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="article row grid">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="contributing-guidelines--贡献指南">Contributing Guidelines / 贡献指南</h1>
+
+<p><em><a href="#english">English</a> | <a href="#%E4%B8%AD%E6%96%87">中文</a></em></p>
+<p><a id="english"></a></p>
+<h1 id="english">English</h1>
+<p>Thank you for considering contributing to the MicroAPI.Net project! Here are some guidelines to help you get involved.</p>
+<h2 id="code-of-conduct">Code of Conduct</h2>
+<p>Please respect all project participants and maintain a professional and friendly communication environment.</p>
+<h2 id="how-to-contribute">How to Contribute</h2>
+<h3 id="reporting-issues">Reporting Issues</h3>
+<p>If you find a bug or have a feature request, please submit it through GitHub Issues, ensuring that you:</p>
+<ol>
+<li>Check if the same or similar issue already exists</li>
+<li>Use a clear title to describe the issue</li>
+<li>Provide detailed steps to reproduce the issue or use cases for feature requests</li>
+<li>Include code examples or screenshots if possible</li>
+</ol>
+<h3 id="submitting-code">Submitting Code</h3>
+<ol>
+<li>Fork the repository and create your branch</li>
+<li>Write code and add tests</li>
+<li>Ensure all tests pass</li>
+<li>Submit your code and create a Pull Request</li>
+</ol>
+<h3 id="pull-request-process">Pull Request Process</h3>
+<ol>
+<li>Update your codebase to include the latest changes from the main branch</li>
+<li>Follow the project's code style and naming conventions</li>
+<li>Describe your changes in detail in the PR description</li>
+<li>Link related issues (if any)</li>
+</ol>
+<h2 id="development-environment-setup">Development Environment Setup</h2>
+<ol>
+<li><p>Clone the repository</p>
+<pre><code class="lang-bash">git clone https://github.com/XmmShp/MicroAPI.Net.git
+cd MicroAPI.Net
+</code></pre>
+</li>
+<li><p>Build the project</p>
+<pre><code class="lang-bash">dotnet build
+</code></pre>
+</li>
+</ol>
+<h2 id="coding-standards">Coding Standards</h2>
+<ul>
+<li>Follow C# coding conventions</li>
+<li>Use meaningful variable and function names</li>
+<li>Add XML documentation comments for public APIs</li>
+<li>Keep code concise and follow the Single Responsibility Principle</li>
+</ul>
+<h2 id="commit-message-guidelines">Commit Message Guidelines</h2>
+<p>Commit messages should clearly describe the changes. We recommend using the following format:</p>
+<pre><code>&lt;type&gt;: &lt;description&gt;
+
+[optional detailed description]
+
+[optional reference to related issues]
+</code></pre>
+<p>Types can be:</p>
+<ul>
+<li><code>feat</code>: New feature</li>
+<li><code>fix</code>: Bug fix</li>
+<li><code>docs</code>: Documentation changes</li>
+<li><code>style</code>: Code style adjustments (not affecting functionality)</li>
+<li><code>refactor</code>: Code refactoring</li>
+<li><code>test</code>: Adding or modifying tests</li>
+<li><code>chore</code>: Changes to build process or auxiliary tools</li>
+</ul>
+<p>For example:</p>
+<pre><code>feat: add custom route prefix support
+
+Added ability to set route prefix in HttpFacade attribute,
+allowing developers to set a base path for the entire controller.
+
+Closes #123
+</code></pre>
+<h2 id="release-process">Release Process</h2>
+<p>Project maintainers are responsible for releases. Version numbers follow <a href="https://semver.org/">Semantic Versioning</a> standards.</p>
+<h2 id="license">License</h2>
+<p>By contributing your code, you agree that your contributions will be licensed under the project's MIT License.</p>
+<hr>
+<p><a id="中文"></a></p>
+<h1 id="中文">中文</h1>
+<p>感谢您考虑为 MicroAPI.Net 项目做出贡献！以下是一些指导方针，帮助您参与到项目中来。</p>
+<h2 id="行为准则">行为准则</h2>
+<p>请尊重所有项目参与者，保持专业和友好的交流环境。</p>
+<h2 id="如何贡献">如何贡献</h2>
+<h3 id="报告问题">报告问题</h3>
+<p>如果您发现了问题或有功能请求，请通过 GitHub Issues 提交，并确保：</p>
+<ol>
+<li>检查是否已存在相同或相似的问题</li>
+<li>使用清晰的标题描述问题</li>
+<li>详细描述问题的复现步骤或功能请求的用例</li>
+<li>如果可能，提供代码示例或截图</li>
+</ol>
+<h3 id="提交代码">提交代码</h3>
+<ol>
+<li>Fork 仓库并创建您的分支</li>
+<li>编写代码并添加测试</li>
+<li>确保所有测试通过</li>
+<li>提交代码并创建 Pull Request</li>
+</ol>
+<h3 id="pull-request-流程">Pull Request 流程</h3>
+<ol>
+<li>更新您的代码库以包含最新的主分支更改</li>
+<li>遵循项目的代码风格和命名约定</li>
+<li>在 PR 描述中详细说明您的更改</li>
+<li>链接相关的 issue（如果有）</li>
+</ol>
+<h2 id="开发环境设置">开发环境设置</h2>
+<ol>
+<li><p>克隆仓库</p>
+<pre><code class="lang-bash">git clone https://github.com/XmmShp/MicroAPI.Net.git
+cd MicroAPI.Net
+</code></pre>
+</li>
+<li><p>构建项目</p>
+<pre><code class="lang-bash">dotnet build
+</code></pre>
+</li>
+</ol>
+<h2 id="代码规范">代码规范</h2>
+<ul>
+<li>遵循 C# 编码规范</li>
+<li>使用有意义的变量和函数名</li>
+<li>为公共 API 添加 XML 文档注释</li>
+<li>保持代码简洁，遵循单一职责原则</li>
+</ul>
+<h2 id="提交信息规范">提交信息规范</h2>
+<p>提交信息应该清晰描述更改内容，建议使用以下格式：</p>
+<pre><code>&lt;类型&gt;: &lt;描述&gt;
+
+[可选的详细描述]
+
+[可选的引用相关 issue]
+</code></pre>
+<p>类型可以是：</p>
+<ul>
+<li><code>feat</code>: 新功能</li>
+<li><code>fix</code>: 修复 bug</li>
+<li><code>docs</code>: 文档更改</li>
+<li><code>style</code>: 代码风格调整（不影响代码功能）</li>
+<li><code>refactor</code>: 代码重构</li>
+<li><code>test</code>: 添加或修改测试</li>
+<li><code>chore</code>: 构建过程或辅助工具的变动</li>
+</ul>
+<p>例如：</p>
+<pre><code>feat: 添加自定义路由前缀支持
+
+增加了在 HttpFacade 特性中设置路由前缀的功能，
+允许开发者为整个控制器设置基础路径。
+
+Closes #123
+</code></pre>
+<h2 id="发布流程">发布流程</h2>
+<p>项目维护者负责版本发布。版本号遵循 <a href="https://semver.org/lang/zh-CN/">语义化版本</a> 规范。</p>
+<h2 id="许可证">许可证</h2>
+<p>通过贡献您的代码，您同意您的贡献将在项目的 MIT 许可证下发布。</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/XmmShp/MicroApi.Net/blob/main/docs/CONTRIBUTING.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      MicroAPI.Net Documentation
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="styles/docfx.js"></script>
+    <script type="text/javascript" src="styles/main.js"></script>
+  </body>
+</html>
