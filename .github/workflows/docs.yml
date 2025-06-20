@@ -1,0 +1,66 @@
+name: Documentation
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  generate_docs:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+    
+    - name: Install DocFX
+      run: dotnet tool install -g docfx
+    
+    - name: Create DocFX project
+      run: |
+        mkdir -p docs
+        cd docs
+        docfx init -q
+    
+    - name: Configure DocFX
+      run: |
+        # Update docfx.json to include the project
+        sed -i 's/"src": \[\]/"src": \[{"src": "..\/src", "files": \["**\/*.cs", "**\/*.csproj"\], "exclude": \["**/bin/**", "**/obj/**"\]}\]/' docs/docfx.json
+        sed -i 's/"dest": "_site\/api"/"dest": "_site\/api", "disableGitFeatures": false, "disableDefaultFilter": false/' docs/docfx.json
+        
+        # Update the site name and other metadata
+        sed -i 's/"_appTitle": "docfx-seed"/"_appTitle": "MicroAPI.Net"/' docs/docfx.json
+        sed -i 's/"_appFooter": ""/"_appFooter": "MicroAPI.Net Documentation"/' docs/docfx.json
+        
+        # Create index.md
+        cat > docs/index.md << EOF
+        # MicroAPI.Net Documentation
+        
+        Welcome to the MicroAPI.Net API documentation. This documentation is automatically generated from the source code.
+        
+        ## Getting Started
+        
+        For more information, please visit the [GitHub repository](https://github.com/XmmShp/MicroAPI).
+        EOF
+    
+    - name: Build Documentation
+      run: |
+        cd docs
+        docfx build
+    
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs/_site
+        force_orphan: true
