@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "MicroAPI.Sample": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:60362;http://localhost:60363"
+    }
+  }
+}

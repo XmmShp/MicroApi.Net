@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: MicroAPI Documentation
+    url: https://github.com/XmmShp/MicroAPI/blob/main/README.md
+    about: Check the documentation before opening an issue
