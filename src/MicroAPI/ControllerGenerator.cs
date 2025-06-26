@@ -15,6 +15,7 @@ namespace MicroAPI
     {
         public const string FacadeSuffix = "Facade";
         public const string InterfacePrefix = "I";
+        public const string AsyncSuffix = "Async";
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
@@ -265,7 +266,8 @@ namespace MicroAPI
                 }
 
                 var returnType = method.ReturnType.ToDisplayString();
-                var requestDtoName = $"{methodName}Request";
+                var methodNameWithoutAsync = methodName.EndsWith(AsyncSuffix) ? methodName.Substring(0, methodName.Length - AsyncSuffix.Length) : methodName;
+                var requestDtoName = $"{methodNameWithoutAsync}Request";
 
                 var routeParameters = ExtractRouteParameters(routePath);
 
