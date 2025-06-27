@@ -217,6 +217,8 @@ namespace MicroAPI
                 sourceBuilder.AppendLine($"using {dtoNs};");
             }
             sourceBuilder.AppendLine();
+            sourceBuilder.AppendLine("#nullable enable");
+            sourceBuilder.AppendLine();
             sourceBuilder.AppendLine($"namespace {controllerNs}");
             sourceBuilder.AppendLine("{");
             sourceBuilder.AppendLine("    [ApiController]");
@@ -364,6 +366,8 @@ namespace MicroAPI
                 var dtosBuilder = new StringBuilder();
 
                 dtosBuilder.AppendLine("using System;");
+                dtosBuilder.AppendLine();
+                dtosBuilder.AppendLine("#nullable enable");
                 dtosBuilder.AppendLine();
                 dtosBuilder.AppendLine($"namespace {dtoNs}");
                 dtosBuilder.AppendLine("{");

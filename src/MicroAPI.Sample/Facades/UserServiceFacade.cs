@@ -13,7 +13,7 @@ public class UserServiceFacade : IUserService
     public Task<List<User>> GetAllUsersAsync() => null!;
 
     [Post]
-    public Task<User> CreateUserAsync(string name, int age) => null!;
+    public Task<User> CreateUserAsync(string name, int? age) => null!;
 
     [Delete("{id}", MethodName = "MyDeleteUser")]
     public bool DeleteUser(int id) => false;

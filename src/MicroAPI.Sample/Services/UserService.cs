@@ -17,13 +17,13 @@ public class UserService : IUserService
         return Task.FromResult(Users.ToList());
     }
 
-    public Task<User> CreateUserAsync(string name, int age)
+    public Task<User> CreateUserAsync(string name, int? age)
     {
         var id = Users.Count + 1;
         var newUser = new User
         {
             Id = id,
-            Age = age,
+            Age = age.GetValueOrDefault(0),
             Name = name
         };
         Users.Add(newUser);

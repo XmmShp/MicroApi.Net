@@ -8,7 +8,7 @@ public interface IUserService
 
     Task<List<User>> GetAllUsersAsync();
 
-    Task<User> CreateUserAsync(string name, int age);
+    Task<User> CreateUserAsync(string name, int? age);
 
     bool DeleteUser(int id);
 
