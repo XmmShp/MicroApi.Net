@@ -249,7 +249,8 @@ namespace MicroAPI
 
                 // Get custom method name if specified
                 var methodName = method.Name;
-                var routePath = methodName;
+                var methodNameWithoutAsync = methodName.EndsWith(AsyncSuffix) ? methodName.Substring(0, methodName.Length - AsyncSuffix.Length) : methodName;
+                var routePath = methodNameWithoutAsync;
 
                 var customRoutePath = GetConstructorArgument(httpMethodAttribute, 0);
 
@@ -268,7 +269,6 @@ namespace MicroAPI
                 }
 
                 var returnType = method.ReturnType.ToDisplayString();
-                var methodNameWithoutAsync = methodName.EndsWith(AsyncSuffix) ? methodName.Substring(0, methodName.Length - AsyncSuffix.Length) : methodName;
                 var requestDtoName = $"{methodNameWithoutAsync}Request";
 
                 var routeParameters = ExtractRouteParameters(routePath);
