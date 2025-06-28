@@ -203,7 +203,7 @@ namespace MicroAPI
 
             var sourceBuilder = new StringBuilder();
 
-            var baseNs = facadeClass.ContainingNamespace.ToDisplayString();
+            var baseNs = facadeClass.ContainingNamespace.ContainingNamespace.ToDisplayString();
             var controllerNs = controllerNamespace ?? $"{baseNs}.Controllers";
             var dtoNs = dtoNamespace ?? controllerNs;
 
@@ -223,7 +223,7 @@ namespace MicroAPI
             sourceBuilder.AppendLine("{");
             sourceBuilder.AppendLine("    [ApiController]");
             sourceBuilder.AppendLine("    [Route(\"[controller]\")]");
-            sourceBuilder.AppendLine($"    public class {controllerName}Controller : ControllerBase");
+            sourceBuilder.AppendLine($"    public partial class {controllerName}Controller : ControllerBase");
             sourceBuilder.AppendLine("    {");
             sourceBuilder.AppendLine($"        private readonly {serviceType.ToDisplayString()} _service;");
             sourceBuilder.AppendLine();
