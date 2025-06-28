@@ -23,7 +23,7 @@ namespace MicroAPI
                 .CreateSyntaxProvider(
                     predicate: static (s, _) => IsFacadeSyntaxNode(s),
                     transform: static (ctx, _) => GetFacadeTypeSymbol(ctx))
-                .Where(static m => m is not null)!
+                .Where(static m => m is not null)
                 .Collect()
                 .SelectMany((symbols, _) => symbols.Distinct(SymbolEqualityComparer.IncludeNullability))
                 .Select((symbol, _) => symbol as INamedTypeSymbol);
@@ -74,15 +74,15 @@ namespace MicroAPI
                 return;
             }
 
-            var (controllerNamespace, dtoNamespace) = GetNamespaces(facadeAttribute);
+            var (controllerNamespace, requestNamespace) = GetNamespaces(facadeAttribute);
 
-            GenerateController(context, facadeClass, serviceType, controllerName!, controllerNamespace, dtoNamespace);
+            GenerateController(context, facadeClass, serviceType, controllerName!, controllerNamespace, requestNamespace);
         }
 
-        private static (string? controllerNamespace, string? dtoNamespace) GetNamespaces(AttributeData facadeAttribute)
+        private static (string? controllerNamespace, string? requestNamespace) GetNamespaces(AttributeData facadeAttribute)
         {
             string? controllerNamespace = null;
-            string? dtoNamespace = null;
+            string? requestNamespace = null;
 
             foreach (var namedArgument in facadeAttribute.NamedArguments)
             {
@@ -91,13 +91,13 @@ namespace MicroAPI
                     case { Key: nameof(HttpFacadeAttribute.ControllerNamespace), Value.Value: string controllerNs }:
                         controllerNamespace = controllerNs;
                         break;
-                    case { Key: nameof(HttpFacadeAttribute.DtoNamespace), Value.Value: string dtoNs }:
-                        dtoNamespace = dtoNs;
+                    case { Key: nameof(HttpFacadeAttribute.RequestNamespace), Value.Value: string requestNs }:
+                        requestNamespace = requestNs;
                         break;
                 }
             }
 
-            return (controllerNamespace, dtoNamespace);
+            return (controllerNamespace, requestNamespace);
         }
 
         private static INamedTypeSymbol? GetServiceType(INamedTypeSymbol facadeClass, AttributeData facadeAttribute)
@@ -190,7 +190,7 @@ namespace MicroAPI
         }
 
         private static void GenerateController(SourceProductionContext context, INamedTypeSymbol facadeClass,
-            INamedTypeSymbol serviceType, string controllerName, string? controllerNamespace = null, string? dtoNamespace = null)
+            INamedTypeSymbol serviceType, string controllerName, string? controllerNamespace = null, string? requestNamespace = null)
         {
             // Get methods from the facade class or interface
             var methods = facadeClass.GetMembers().OfType<IMethodSymbol>()
@@ -205,16 +205,16 @@ namespace MicroAPI
 
             var baseNs = facadeClass.ContainingNamespace.ContainingNamespace.ToDisplayString();
             var controllerNs = controllerNamespace ?? $"{baseNs}.Controllers";
-            var dtoNs = dtoNamespace ?? controllerNs;
+            var requestNs = requestNamespace ?? controllerNs;
 
-            var requestDtos = new List<string>();
+            var requests = new List<string>();
 
             sourceBuilder.AppendLine("using Microsoft.AspNetCore.Mvc;");
             sourceBuilder.AppendLine("using System;");
             sourceBuilder.AppendLine("using System.Threading.Tasks;");
-            if (controllerNs != dtoNs)
+            if (controllerNs != requestNs)
             {
-                sourceBuilder.AppendLine($"using {dtoNs};");
+                sourceBuilder.AppendLine($"using {requestNs};");
             }
             sourceBuilder.AppendLine();
             sourceBuilder.AppendLine("#nullable enable");
@@ -269,7 +269,7 @@ namespace MicroAPI
                 }
 
                 var returnType = method.ReturnType.ToDisplayString();
-                var requestDtoName = $"{methodNameWithoutAsync}Request";
+                var requestName = $"{methodNameWithoutAsync}Request";
 
                 var routeParameters = ExtractRouteParameters(routePath);
 
@@ -285,12 +285,12 @@ namespace MicroAPI
                 // Generate request DTO only if there are non-route parameters and not a GET method
                 if (nonRouteParameters.Count > 0 && !isGetMethod)
                 {
-                    var requestDtoBuilder = new StringBuilder();
+                    var requestBuilder = new StringBuilder();
 
-                    requestDtoBuilder.Append($"public record {requestDtoName}(");
-                    requestDtoBuilder.Append(string.Join(", ", nonRouteParameters.Select(p => $"{p.Type.ToDisplayString()} {p.Name}")));
-                    requestDtoBuilder.AppendLine(");");
-                    requestDtos.Add(requestDtoBuilder.ToString());
+                    requestBuilder.Append($"public record {requestName}(");
+                    requestBuilder.Append(string.Join(", ", nonRouteParameters.Select(p => $"{p.Type.ToDisplayString()} {p.Name}")));
+                    requestBuilder.AppendLine(");");
+                    requests.Add(requestBuilder.ToString());
                 }
 
                 // Generate controller method
@@ -325,7 +325,7 @@ namespace MicroAPI
                     // Then add the request DTO if needed
                     if (hasRequestDto)
                     {
-                        methodParameters.Add($"[FromBody] {requestDtoName} request");
+                        methodParameters.Add($"[FromBody] {requestName} request");
                     }
 
                     // Build service call arguments in original order
@@ -361,25 +361,25 @@ namespace MicroAPI
 
             // Add request DTOs
             // ReSharper disable once InvertIf
-            if (requestDtos.Any())
+            if (requests.Any())
             {
-                var dtosBuilder = new StringBuilder();
+                var requestsBuilder = new StringBuilder();
 
-                dtosBuilder.AppendLine("using System;");
-                dtosBuilder.AppendLine();
-                dtosBuilder.AppendLine("#nullable enable");
-                dtosBuilder.AppendLine();
-                dtosBuilder.AppendLine($"namespace {dtoNs}");
-                dtosBuilder.AppendLine("{");
+                requestsBuilder.AppendLine("using System;");
+                requestsBuilder.AppendLine();
+                requestsBuilder.AppendLine("#nullable enable");
+                requestsBuilder.AppendLine();
+                requestsBuilder.AppendLine($"namespace {requestNs}");
+                requestsBuilder.AppendLine("{");
 
-                foreach (var dto in requestDtos)
+                foreach (var request in requests)
                 {
-                    dtosBuilder.AppendLine($"    {dto}");
+                    requestsBuilder.AppendLine($"    {request}");
                 }
 
-                dtosBuilder.AppendLine("}");
+                requestsBuilder.AppendLine("}");
 
-                context.AddSource($"{controllerName}Dtos.g.cs", SourceText.From(dtosBuilder.ToString(), Encoding.UTF8));
+                context.AddSource($"{controllerName}Requests.g.cs", SourceText.From(requestsBuilder.ToString(), Encoding.UTF8));
             }
         }
 

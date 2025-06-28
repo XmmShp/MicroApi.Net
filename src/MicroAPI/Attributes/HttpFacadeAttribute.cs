@@ -26,10 +26,10 @@ namespace MicroAPI
         public string? ControllerNamespace { get; set; }
 
         /// <summary>
-        /// Gets or sets the namespace for the generated DTOs.
-        /// If not specified, DTOs will be generated in the same namespace as the controller.
+        /// Gets or sets the namespace for the generated requests.
+        /// If not specified, requests will be generated in the same namespace as the controller.
         /// </summary>
-        public string? DtoNamespace { get; set; }
+        public string? RequestNamespace { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpFacadeAttribute"/> class.
