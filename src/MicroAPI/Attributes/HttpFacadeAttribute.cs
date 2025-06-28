@@ -48,5 +48,29 @@ namespace MicroAPI
         }
     }
 
+    /// <summary>
+    /// Marks a class or interface for generating a controller.
+    /// </summary>
+    /// <typeparam name="TService">The service type that the facade implements.</typeparam>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
+    public class HttpFacadeAttribute<TService> : HttpFacadeAttribute where TService : class
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HttpFacadeAttribute{TService}"/> class.
+        /// </summary>
+        public HttpFacadeAttribute()
+        {
+            Service = typeof(TService);
+        }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HttpFacadeAttribute{TService}"/> class.
+        /// </summary>
+        /// <param name="controllerName">The name of the controller to generate.</param>
+        public HttpFacadeAttribute(string controllerName)
+            : base(controllerName)
+        {
+            Service = typeof(TService);
+        }
+    }
 }

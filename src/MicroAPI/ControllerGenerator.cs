@@ -13,6 +13,7 @@ namespace MicroAPI
     [Generator]
     public class ControllerGenerator : IIncrementalGenerator
     {
+        public const string FacadeSyntaxName = "HttpFacade";
         public const string FacadeSuffix = "Facade";
         public const string InterfacePrefix = "I";
         public const string AsyncSuffix = "Async";
@@ -40,8 +41,24 @@ namespace MicroAPI
 
         private static bool IsFacadeSyntaxNode(SyntaxNode node)
         {
-            return node is MemberDeclarationSyntax { AttributeLists.Count: > 0 }
-                and (ClassDeclarationSyntax or InterfaceDeclarationSyntax);
+            if (node is not (MemberDeclarationSyntax { AttributeLists.Count: > 0 } classDecl
+                and (ClassDeclarationSyntax or InterfaceDeclarationSyntax)))
+            {
+                return false;
+            }
+
+            var hasFacadeAttribute = classDecl.AttributeLists
+                    .SelectMany(al => al.Attributes)
+                    .Any(a =>
+                    {
+                        var name = a.Name.ToString();
+                        return name == nameof(HttpFacadeAttribute)
+                               || name.StartsWith(nameof(HttpFacadeAttribute) + "<")
+                               || name == FacadeSyntaxName
+                               || name.StartsWith(FacadeSyntaxName + "<");
+                    });
+
+            return hasFacadeAttribute;
         }
 
         private static INamedTypeSymbol? GetFacadeTypeSymbol(GeneratorSyntaxContext context)
@@ -49,7 +66,10 @@ namespace MicroAPI
             var memberDeclaration = (MemberDeclarationSyntax)context.Node;
 
             if (context.SemanticModel.GetDeclaredSymbol(memberDeclaration) is INamedTypeSymbol symbol &&
-                symbol.GetAttributes().Any(a => a.AttributeClass?.Name == nameof(HttpFacadeAttribute)))
+                symbol.GetAttributes().Any(a =>
+                    a.AttributeClass?.Name == nameof(HttpFacadeAttribute) ||
+                    (a.AttributeClass?.Name.StartsWith(nameof(HttpFacadeAttribute)) == true &&
+                     a.AttributeClass.TypeArguments.Length > 0)))
             {
                 return symbol;
             }
@@ -60,7 +80,10 @@ namespace MicroAPI
         private static void ProcessFacadeClass(SourceProductionContext context, INamedTypeSymbol facadeClass)
         {
             var facadeAttribute = facadeClass.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.Name == nameof(HttpFacadeAttribute));
+                .FirstOrDefault(a =>
+                    a.AttributeClass?.Name == nameof(HttpFacadeAttribute) ||
+                    (a.AttributeClass?.Name.StartsWith(nameof(HttpFacadeAttribute)) == true &&
+                     a.AttributeClass.TypeArguments.Length > 0));
 
             if (facadeAttribute is null)
             {
@@ -110,21 +133,30 @@ namespace MicroAPI
             }
             else
             {
-                // Try to get from attribute first
-                foreach (var namedArgument in facadeAttribute.NamedArguments)
+                // Check if it's a generic HttpFacadeAttribute<TService>
+                if (facadeAttribute.AttributeClass?.TypeArguments.Length > 0)
                 {
-                    // ReSharper disable once InvertIf
-                    if (namedArgument is { Key: nameof(HttpFacadeAttribute.Service), Value.Value: INamedTypeSymbol serviceSymbol })
-                    {
-                        serviceType = serviceSymbol;
-                        break;
-                    }
+                    // Get the service type from the generic type argument
+                    serviceType = (INamedTypeSymbol)facadeAttribute.AttributeClass.TypeArguments[0];
                 }
-
-                // If not specified in attribute, try to find from implemented interfaces
-                if (serviceType is null && facadeClass.Interfaces.Length > 0)
+                else
                 {
-                    serviceType = facadeClass.Interfaces[0];
+                    // Try to get from attribute first (non-generic form)
+                    foreach (var namedArgument in facadeAttribute.NamedArguments)
+                    {
+                        // ReSharper disable once InvertIf
+                        if (namedArgument is { Key: nameof(HttpFacadeAttribute.Service), Value.Value: INamedTypeSymbol serviceSymbol })
+                        {
+                            serviceType = serviceSymbol;
+                            break;
+                        }
+                    }
+
+                    // If not specified in attribute, try to find from implemented interfaces
+                    if (serviceType is null && facadeClass.Interfaces.Length > 0)
+                    {
+                        serviceType = facadeClass.Interfaces[0];
+                    }
                 }
             }
 
@@ -166,6 +198,7 @@ namespace MicroAPI
             }
 
             // Find all segments like {paramName} in the route
+            // ReSharper disable once UseCollectionExpression
             var segments = routePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var segment in segments)
             {
@@ -218,6 +251,7 @@ namespace MicroAPI
             }
             sourceBuilder.AppendLine();
             sourceBuilder.AppendLine("#nullable enable");
+            sourceBuilder.AppendLine("#pragma warning disable");
             sourceBuilder.AppendLine();
             sourceBuilder.AppendLine($"namespace {controllerNs}");
             sourceBuilder.AppendLine("{");
@@ -368,6 +402,7 @@ namespace MicroAPI
                 requestsBuilder.AppendLine("using System;");
                 requestsBuilder.AppendLine();
                 requestsBuilder.AppendLine("#nullable enable");
+                requestsBuilder.AppendLine("#pragma warning disable");
                 requestsBuilder.AppendLine();
                 requestsBuilder.AppendLine($"namespace {requestNs}");
                 requestsBuilder.AppendLine("{");
@@ -392,7 +427,7 @@ namespace MicroAPI
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     new DiagnosticDescriptor(
-                        id: "CG001",
+                        id: "MA001",
                         title: "Unmatched route parameter",
                         messageFormat: "Route parameter '{0}' in route '{1}' does not match any parameter in method '{2}'",
                         category: "ControllerGenerator",
