@@ -330,6 +330,72 @@ namespace MicroAPI
                 // Generate controller method
                 sourceBuilder.AppendLine($"        [Http{httpMethod}(\"{routePath}\")]");
 
+                // Copy other attributes from the original method (excluding HttpMethod attributes)
+                foreach (var attribute in method.GetAttributes())
+                {
+                    // Skip HttpMethod attributes as we already added them
+                    if (attribute.AttributeClass?.BaseType?.Name == nameof(HttpMethodAttributeBase))
+                    {
+                        continue;
+                    }
+
+                    // Generate the attribute with its parameters using fully qualified name
+                    var attributeClass = attribute.AttributeClass;
+                    if (attributeClass == null)
+                        continue;
+
+                    // Get fully qualified name
+                    var fullyQualifiedName = attributeClass.ToDisplayString();
+
+                    // Remove the 'Attribute' suffix if present in the display name
+                    var attributeName = fullyQualifiedName.EndsWith("Attribute")
+                        ? fullyQualifiedName.Substring(0, fullyQualifiedName.Length - "Attribute".Length)
+                        : fullyQualifiedName;
+
+                    var attributeText = new StringBuilder($"        [{attributeName}");
+
+                    // Add constructor arguments
+                    if (attribute.ConstructorArguments.Length > 0)
+                    {
+                        var formattedArgs = attribute.ConstructorArguments
+                            .Select(GeneratorHelper.FormatAttributeArgument)
+                            .Where(arg => !string.IsNullOrEmpty(arg))
+                            .ToList();
+
+                        // Only add parentheses if there are non-empty arguments
+                        if (formattedArgs.Any())
+                        {
+                            attributeText.Append('(');
+                            attributeText.Append(string.Join(", ", formattedArgs));
+                            attributeText.Append(')');
+                        }
+                    }
+
+                    // Add named arguments
+                    if (attribute.NamedArguments.Length > 0)
+                    {
+                        if (attribute.ConstructorArguments.Length == 0)
+                        {
+                            attributeText.Append('(');
+                        }
+                        else
+                        {
+                            attributeText.Append(", ");
+                        }
+
+                        attributeText.Append(string.Join(", ", attribute.NamedArguments
+                            .Select(arg => $"{arg.Key} = {GeneratorHelper.FormatAttributeArgument(arg.Value)}")));
+
+                        if (attribute.ConstructorArguments.Length == 0)
+                        {
+                            attributeText.Append(')');
+                        }
+                    }
+
+                    attributeText.Append(']');
+                    sourceBuilder.AppendLine(attributeText.ToString());
+                }
+
                 sourceBuilder.Append($"        public {returnType} {methodName}(");
 
                 // Build method parameters and service call arguments in original order
@@ -421,22 +487,19 @@ namespace MicroAPI
         private static void WarnIfHasUnmatchedRouteParam(SourceProductionContext context, HashSet<string> routeParameters,
             ImmutableHashSet<string> methodParameterNames, IMethodSymbol method, string routePath)
         {
-            var unmatchedRouteParams = routeParameters.Where(rp => !methodParameterNames.Contains(rp)).ToList();
-
-            if (unmatchedRouteParams.Any())
+            var unmatchedParams = routeParameters.Where(p => !methodParameterNames.Contains(p)).ToList();
+            if (unmatchedParams.Any())
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     new DiagnosticDescriptor(
-                        id: "MA001",
-                        title: "Unmatched route parameter",
-                        messageFormat: "Route parameter '{0}' in route '{1}' does not match any parameter in method '{2}'",
-                        category: "ControllerGenerator",
+                        id: "MA003",
+                        title: "Route parameter not found in method signature",
+                        messageFormat: "Route parameter '{0}' in route '{1}' not found in method signature",
+                        category: "MicroAPI",
                         defaultSeverity: DiagnosticSeverity.Warning,
                         isEnabledByDefault: true),
                     method.Locations.FirstOrDefault(),
-                    string.Join(", ", unmatchedRouteParams),
-                    routePath,
-                    method.Name));
+                    unmatchedParams.First(), routePath));
             }
         }
     }

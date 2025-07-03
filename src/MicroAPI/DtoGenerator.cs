@@ -90,7 +90,7 @@ namespace MicroAPI
             return hasDtoAttribute;
         }
 
-        private static (ClassDeclarationSyntax, INamedTypeSymbol, INamedTypeSymbol, string[])? GetDtoClassInfo(GeneratorSyntaxContext context)
+        private static (ClassDeclarationSyntax, INamedTypeSymbol, INamedTypeSymbol, string[], INamedTypeSymbol[])? GetDtoClassInfo(GeneratorSyntaxContext context)
         {
             var classDecl = (ClassDeclarationSyntax)context.Node;
             var model = context.SemanticModel;
@@ -129,39 +129,48 @@ namespace MicroAPI
 
             // Get ignored properties
             var ignoredProperties = Array.Empty<string>();
+            var ignoredAttributes = Array.Empty<INamedTypeSymbol>();
 
-            // Check for IgnoredProperties in named arguments
+            // Check for named arguments
             foreach (var namedArg in dtoAttribute.NamedArguments)
             {
-                // ReSharper disable once InvertIf
+                // Get ignored properties
                 if (namedArg is { Key: nameof(DtoAttribute.IgnoredProperties), Value.Values.Length: > 0 })
                 {
                     ignoredProperties = namedArg.Value.Values
                         .Select(v => v.Value?.ToString() ?? string.Empty)
                         .Where(s => !string.IsNullOrEmpty(s))
                         .ToArray();
-                    break;
+                }
+
+                // Get ignored attributes
+                if (namedArg is { Key: nameof(DtoAttribute.IgnoredAttributes), Value.Values.Length: > 0 })
+                {
+                    ignoredAttributes = namedArg.Value.Values
+                        .Select(v => v.Value as INamedTypeSymbol)
+                        .Where(s => s != null)
+                        .ToArray()!;
                 }
             }
 
-            return (classDecl, typeSymbol!, entityType, ignoredProperties);
+            return (classDecl, typeSymbol!, entityType, ignoredProperties, ignoredAttributes);
         }
 
         private static void GenerateDto(SourceProductionContext context,
-             (ClassDeclarationSyntax, INamedTypeSymbol, INamedTypeSymbol, string[]) dtoInfo)
+             (ClassDeclarationSyntax, INamedTypeSymbol, INamedTypeSymbol, string[], INamedTypeSymbol[]) dtoInfo)
         {
-            var (_, dtoType, entityType, ignoredProperties) = dtoInfo;
+            var (_, dtoType, entityType, ignoredProperties, ignoredAttributes) = dtoInfo;
             var sourceBuilder = new StringBuilder();
             dtoType.ContainingNamespace.ToDisplayString();
 
             // Generate the DTO class
-            GenerateDtoClassDefinition(sourceBuilder, dtoType, entityType, ignoredProperties);
+            GenerateDtoClassDefinition(sourceBuilder, dtoType, entityType, ignoredProperties, ignoredAttributes);
 
             context.AddSource($"{dtoType.Name}.g.cs", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
         }
 
         private static void GenerateDtoClassDefinition(StringBuilder sourceBuilder, INamedTypeSymbol dtoType,
-            INamedTypeSymbol entityType, string[] ignoredProperties)
+            INamedTypeSymbol entityType, string[] ignoredProperties, INamedTypeSymbol[] ignoredAttributes)
         {
             var namespaceName = dtoType.ContainingNamespace.ToDisplayString();
 
@@ -190,12 +199,132 @@ namespace MicroAPI
                     continue;
                 }
 
+                // Skip if property has any of the ignored attributes
+                if (ignoredAttributes.Length > 0 && HasIgnoredAttribute(member, ignoredAttributes))
+                {
+                    continue;
+                }
+
                 var propertyType = GetPropertyType(member.Type);
+
+                // Get attributes from the source property
+                var attributes = member.GetAttributes();
+
+                // Copy attributes from the source property to the generated property
+                foreach (var attribute in attributes)
+                {
+                    // Skip attributes that are in the ignored list
+                    if (ignoredAttributes.Length > 0 &&
+                        attribute.AttributeClass != null &&
+                        ignoredAttributes.Any(ignored => IsAttributeOfTypeOrDerivedFrom(attribute.AttributeClass, ignored)))
+                    {
+                        continue;
+                    }
+
+                    // Generate the attribute with its parameters using fully qualified name
+                    var attributeClass = attribute.AttributeClass;
+                    if (attributeClass == null)
+                        continue;
+
+                    // Get fully qualified name
+                    var fullyQualifiedName = attributeClass.ToDisplayString();
+
+                    // Remove the 'Attribute' suffix if present in the display name
+                    var attributeName = fullyQualifiedName.EndsWith("Attribute")
+                        ? fullyQualifiedName.Substring(0, fullyQualifiedName.Length - "Attribute".Length)
+                        : fullyQualifiedName;
+
+                    var attributeText = new StringBuilder($"        [{attributeName}");
+
+                    // Add constructor arguments
+                    if (attribute.ConstructorArguments.Length > 0)
+                    {
+                        var formattedArgs = attribute.ConstructorArguments
+                            .Select(GeneratorHelper.FormatAttributeArgument)
+                            .Where(arg => !string.IsNullOrEmpty(arg))
+                            .ToList();
+
+                        // Only add parentheses if there are non-empty arguments
+                        if (formattedArgs.Any())
+                        {
+                            attributeText.Append('(');
+                            attributeText.Append(string.Join(", ", formattedArgs));
+                            attributeText.Append(')');
+                        }
+                    }
+
+                    // Add named arguments
+                    if (attribute.NamedArguments.Length > 0)
+                    {
+                        if (attribute.ConstructorArguments.Length == 0
+                            || attribute.ConstructorArguments
+                                .Select(GeneratorHelper.FormatAttributeArgument)
+                                .All(string.IsNullOrEmpty))
+                        {
+                            attributeText.Append('(');
+                        }
+                        else
+                        {
+                            attributeText.Append(", ");
+                        }
+
+                        attributeText.Append(string.Join(", ", attribute.NamedArguments
+                            .Select(arg => $"{arg.Key} = {GeneratorHelper.FormatAttributeArgument(arg.Value)}")));
+
+                        if (attribute.ConstructorArguments.Length == 0
+                            || attribute.ConstructorArguments
+                                .Select(GeneratorHelper.FormatAttributeArgument)
+                                .All(string.IsNullOrEmpty))
+                        {
+                            attributeText.Append(')');
+                        }
+                    }
+
+                    attributeText.Append(']');
+                    sourceBuilder.AppendLine(attributeText.ToString());
+                }
+
+                // Generate the property with required modifier and default value if applicable
                 sourceBuilder.AppendLine($"        public {propertyType} {member.Name} {{ get; set; }}");
             }
 
             sourceBuilder.AppendLine("    }");
             sourceBuilder.AppendLine("}");
+        }
+
+        private static bool HasIgnoredAttribute(IPropertySymbol property, INamedTypeSymbol[] ignoredAttributes)
+        {
+            // Get all attributes on the property
+            var propertyAttributes = property.GetAttributes();
+
+            // Check if any property attribute is of an ignored type or derives from an ignored type
+            return propertyAttributes.Select(propertyAttribute => propertyAttribute.AttributeClass)
+                .OfType<INamedTypeSymbol>()
+                .Any(attributeType =>
+                    ignoredAttributes.Any(ignoredAttribute
+                        => IsAttributeOfTypeOrDerivedFrom(attributeType, ignoredAttribute)));
+        }
+
+        private static bool IsAttributeOfTypeOrDerivedFrom(INamedTypeSymbol attributeType, INamedTypeSymbol baseType)
+        {
+            // Check if the attribute is the same type as the base type
+            if (SymbolEqualityComparer.Default.Equals(attributeType, baseType))
+            {
+                return true;
+            }
+
+            // Check if the attribute derives from the base type
+            var currentType = attributeType.BaseType;
+            while (currentType != null)
+            {
+                if (SymbolEqualityComparer.Default.Equals(currentType, baseType))
+                {
+                    return true;
+                }
+                currentType = currentType.BaseType;
+            }
+
+            return false;
         }
 
         private static string GetPropertyType(ITypeSymbol typeSymbol)

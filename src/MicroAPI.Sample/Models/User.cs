@@ -1,9 +1,13 @@
-﻿namespace MicroAPI.Sample.Models;
+using System.ComponentModel.DataAnnotations;
+
+namespace MicroAPI.Sample.Models;
 
 public class User
 {
     public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(100)]
+    public required string Name { get; set; } = string.Empty;
     public int Age { get; set; }
     public Address? Address { get; set; }
 }

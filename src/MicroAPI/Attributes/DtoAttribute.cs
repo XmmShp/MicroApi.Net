@@ -19,6 +19,12 @@ namespace MicroAPI
         public string[]? IgnoredProperties { get; set; }
 
         /// <summary>
+        /// Gets or sets the attribute types to ignore when generating the Dto.
+        /// If a base attribute type is specified (e.g., typeof(Attribute)), all derived attributes will also be ignored.
+        /// </summary>
+        public Type[]? IgnoredAttributes { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="DtoAttribute"/> class.
         /// </summary>
         /// <param name="entityType">The entity type that this Dto maps to.</param>
