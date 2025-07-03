@@ -284,8 +284,16 @@ namespace MicroAPI
                     sourceBuilder.AppendLine(attributeText.ToString());
                 }
 
+                // Check if the property has a default value
+                var defaultValueText = string.Empty;
+                if (member.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()
+                    is PropertyDeclarationSyntax { Initializer: not null } propertySyntax)
+                {
+                    defaultValueText = $" = {propertySyntax.Initializer.Value};";
+                }
+
                 // Generate the property with required modifier and default value if applicable
-                sourceBuilder.AppendLine($"        public {propertyType} {member.Name} {{ get; set; }}");
+                sourceBuilder.AppendLine($"        public {propertyType} {member.Name} {{ get; set; }}{defaultValueText}");
             }
 
             sourceBuilder.AppendLine("    }");
