@@ -6,8 +6,9 @@ public class User
 {
     public int Id { get; set; }
 
-    [MaxLength(100)]
+    [MaxLength(100), MinLength(5)]
     public required string Name { get; set; } = string.Empty;
+    [Range(0, 60, ErrorMessage = "Wrong Age")]
     public int Age { get; set; }
     public Address? Address { get; set; }
 }

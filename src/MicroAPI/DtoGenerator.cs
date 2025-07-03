@@ -236,6 +236,7 @@ namespace MicroAPI
 
                     var attributeText = new StringBuilder($"        [{attributeName}");
 
+                    var needRightBracket = false;
                     // Add constructor arguments
                     if (attribute.ConstructorArguments.Length > 0)
                     {
@@ -249,7 +250,7 @@ namespace MicroAPI
                         {
                             attributeText.Append('(');
                             attributeText.Append(string.Join(", ", formattedArgs));
-                            attributeText.Append(')');
+                            needRightBracket = true;
                         }
                     }
 
@@ -262,6 +263,7 @@ namespace MicroAPI
                                 .All(string.IsNullOrEmpty))
                         {
                             attributeText.Append('(');
+                            needRightBracket = true;
                         }
                         else
                         {
@@ -270,14 +272,11 @@ namespace MicroAPI
 
                         attributeText.Append(string.Join(", ", attribute.NamedArguments
                             .Select(arg => $"{arg.Key} = {GeneratorHelper.FormatAttributeArgument(arg.Value)}")));
+                    }
 
-                        if (attribute.ConstructorArguments.Length == 0
-                            || attribute.ConstructorArguments
-                                .Select(GeneratorHelper.FormatAttributeArgument)
-                                .All(string.IsNullOrEmpty))
-                        {
-                            attributeText.Append(')');
-                        }
+                    if (needRightBracket)
+                    {
+                        attributeText.Append(')');
                     }
 
                     attributeText.Append(']');
