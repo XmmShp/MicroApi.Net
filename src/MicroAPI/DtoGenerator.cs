@@ -205,7 +205,7 @@ namespace MicroAPI
                     continue;
                 }
 
-                var propertyType = GetPropertyType(member.Type);
+                var propertyType = GeneratorHelper.GetTypeName(member.Type);
 
                 // Get attributes from the source property
                 var attributes = member.GetAttributes();
@@ -241,7 +241,7 @@ namespace MicroAPI
                     if (attribute.ConstructorArguments.Length > 0)
                     {
                         var formattedArgs = attribute.ConstructorArguments
-                            .Select(GeneratorHelper.FormatAttributeArgument)
+                            .Select(GeneratorHelper.FormatArgument)
                             .Where(arg => !string.IsNullOrEmpty(arg))
                             .ToList();
 
@@ -259,7 +259,7 @@ namespace MicroAPI
                     {
                         if (attribute.ConstructorArguments.Length == 0
                             || attribute.ConstructorArguments
-                                .Select(GeneratorHelper.FormatAttributeArgument)
+                                .Select(GeneratorHelper.FormatArgument)
                                 .All(string.IsNullOrEmpty))
                         {
                             attributeText.Append('(');
@@ -271,7 +271,7 @@ namespace MicroAPI
                         }
 
                         attributeText.Append(string.Join(", ", attribute.NamedArguments
-                            .Select(arg => $"{arg.Key} = {GeneratorHelper.FormatAttributeArgument(arg.Value)}")));
+                            .Select(arg => $"{arg.Key} = {GeneratorHelper.FormatArgument(arg.Value)}")));
                     }
 
                     if (needRightBracket)
@@ -332,29 +332,6 @@ namespace MicroAPI
             }
 
             return false;
-        }
-
-        private static string GetPropertyType(ITypeSymbol typeSymbol)
-        {
-            // Handle collection types (List<T>, IEnumerable<T>, etc.)
-            // ReSharper disable once InvertIf
-            if (typeSymbol is INamedTypeSymbol { IsGenericType: true } namedType)
-            {
-                var typeArgs = namedType.TypeArguments;
-                // ReSharper disable once InvertIf
-                if (typeArgs.Length == 1)
-                {
-                    var elementType = typeArgs[0];
-                    var collectionTypeName = namedType.ConstructedFrom.ToDisplayString();
-
-                    // For generic collections, process the element type
-                    var elementTypeName = GetPropertyType(elementType);
-                    return $"{collectionTypeName.Split('<')[0]}<{elementTypeName}>";
-                }
-            }
-
-            // Return the original type for all types
-            return typeSymbol.ToDisplayString();
         }
     }
 }
