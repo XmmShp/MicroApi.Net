@@ -11,6 +11,7 @@ public class User
     [Range(0, 60, ErrorMessage = "Wrong Age")]
     public int Age { get; set; }
     public Address? Address { get; set; }
+    public List<string>? Roles { get; set; } = [];
 }
 
 public class Address

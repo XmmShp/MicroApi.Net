@@ -14,8 +14,6 @@ namespace MicroAPI
     public class ControllerGenerator : IIncrementalGenerator
     {
         public const string FacadeSyntaxName = "HttpFacade";
-        public const string FacadeSuffix = "Facade";
-        public const string InterfacePrefix = "I";
         public const string AsyncSuffix = "Async";
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -41,8 +39,7 @@ namespace MicroAPI
 
         private static bool IsFacadeSyntaxNode(SyntaxNode node)
         {
-            if (node is not (MemberDeclarationSyntax { AttributeLists.Count: > 0 } classDecl
-                and (ClassDeclarationSyntax or InterfaceDeclarationSyntax)))
+            if (node is not ClassDeclarationSyntax { AttributeLists.Count: > 0 } classDecl)
             {
                 return false;
             }
@@ -58,14 +55,16 @@ namespace MicroAPI
                                || name.StartsWith(FacadeSyntaxName + "<");
                     });
 
-            return hasFacadeAttribute;
+            // Check if it's a partial class
+            var isPartial = classDecl.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
+            return hasFacadeAttribute && isPartial;
         }
 
         private static INamedTypeSymbol? GetFacadeTypeSymbol(GeneratorSyntaxContext context)
         {
-            var memberDeclaration = (MemberDeclarationSyntax)context.Node;
+            var classDeclaration = (ClassDeclarationSyntax)context.Node;
 
-            if (context.SemanticModel.GetDeclaredSymbol(memberDeclaration) is INamedTypeSymbol symbol &&
+            if (context.SemanticModel.GetDeclaredSymbol(classDeclaration) is { } symbol &&
                 symbol.GetAttributes().Any(a =>
                     a.AttributeClass?.Name == nameof(HttpFacadeAttribute) ||
                     (a.AttributeClass?.Name.StartsWith(nameof(HttpFacadeAttribute)) == true &&
@@ -77,9 +76,9 @@ namespace MicroAPI
             return null;
         }
 
-        private static void ProcessFacadeClass(SourceProductionContext context, INamedTypeSymbol facadeClass)
+        private static void ProcessFacadeClass(SourceProductionContext context, INamedTypeSymbol controllerClass)
         {
-            var facadeAttribute = facadeClass.GetAttributes()
+            var facadeAttribute = controllerClass.GetAttributes()
                 .FirstOrDefault(a =>
                     a.AttributeClass?.Name == nameof(HttpFacadeAttribute) ||
                     (a.AttributeClass?.Name.StartsWith(nameof(HttpFacadeAttribute)) == true &&
@@ -90,39 +89,19 @@ namespace MicroAPI
                 return;
             }
 
-            var controllerName = GetControllerName(facadeClass, facadeAttribute);
-            var serviceType = GetServiceType(facadeClass, facadeAttribute);
+            var controllerName = controllerClass.Name.EndsWith("Controller") ?
+                               controllerClass.Name.Substring(0, controllerClass.Name.Length - "Controller".Length) :
+                               controllerClass.Name;
+
+            var serviceType = GetServiceType(controllerClass, facadeAttribute);
             if (serviceType is null)
             {
                 return;
             }
 
-            var (controllerNamespace, requestNamespace) = GetNamespaces(facadeAttribute);
-
-            GenerateController(context, facadeClass, serviceType, controllerName!, controllerNamespace, requestNamespace);
+            // Generate the implementation part for the partial controller
+            GeneratePartialControllerImplementation(context, controllerClass, serviceType, controllerName);
         }
-
-        private static (string? controllerNamespace, string? requestNamespace) GetNamespaces(AttributeData facadeAttribute)
-        {
-            string? controllerNamespace = null;
-            string? requestNamespace = null;
-
-            foreach (var namedArgument in facadeAttribute.NamedArguments)
-            {
-                switch (namedArgument)
-                {
-                    case { Key: nameof(HttpFacadeAttribute.ControllerNamespace), Value.Value: string controllerNs }:
-                        controllerNamespace = controllerNs;
-                        break;
-                    case { Key: nameof(HttpFacadeAttribute.RequestNamespace), Value.Value: string requestNs }:
-                        requestNamespace = requestNs;
-                        break;
-                }
-            }
-
-            return (controllerNamespace, requestNamespace);
-        }
-
         private static INamedTypeSymbol? GetServiceType(INamedTypeSymbol facadeClass, AttributeData facadeAttribute)
         {
             // Get service type from attribute or use the interface itself if it's an interface
@@ -163,32 +142,6 @@ namespace MicroAPI
             return serviceType;
         }
 
-        private static string? GetControllerName(INamedTypeSymbol facadeClass, AttributeData facadeAttribute)
-        {
-            var controllerName = GetConstructorArgument(facadeAttribute, 0);
-            if (string.IsNullOrEmpty(controllerName))
-            {
-                controllerName = facadeClass.TypeKind switch
-                {
-                    TypeKind.Class => facadeClass.Name.EndsWith(FacadeSuffix)
-                        ? facadeClass.Name.Substring(0, facadeClass.Name.Length - FacadeSuffix.Length)
-                        : facadeClass.Name,
-                    TypeKind.Interface => facadeClass.Name.StartsWith(InterfacePrefix)
-                        ? facadeClass.Name.Substring(InterfacePrefix.Length,
-                            facadeClass.Name.Length - InterfacePrefix.Length)
-                        : facadeClass.Name,
-                    _ => facadeClass.Name
-                };
-            }
-
-            return controllerName;
-        }
-
-        private static string? GetConstructorArgument(AttributeData attribute, int index)
-            => attribute.ConstructorArguments.Length > index
-                ? attribute.ConstructorArguments[index].Value?.ToString()
-                : null;
-
         private static HashSet<string> ExtractRouteParameters(string routePath)
         {
             var parameters = new HashSet<string>();
@@ -222,11 +175,11 @@ namespace MicroAPI
             return parameters;
         }
 
-        private static void GenerateController(SourceProductionContext context, INamedTypeSymbol facadeClass,
-            INamedTypeSymbol serviceType, string controllerName, string? controllerNamespace = null, string? requestNamespace = null)
+        private static void GeneratePartialControllerImplementation(SourceProductionContext context, INamedTypeSymbol controllerClass,
+            INamedTypeSymbol serviceType, string controllerName)
         {
-            // Get methods from the facade class or interface
-            var methods = facadeClass.GetMembers().OfType<IMethodSymbol>()
+            // Get methods from the service interface
+            var methods = controllerClass.GetMembers().OfType<IMethodSymbol>()
                 .Where(m => m.MethodKind == MethodKind.Ordinary).ToList();
 
             if (!methods.Any())
@@ -236,19 +189,11 @@ namespace MicroAPI
 
             var sourceBuilder = new StringBuilder();
 
-            var baseNs = facadeClass.ContainingNamespace.ContainingNamespace.ToDisplayString();
-            var controllerNs = controllerNamespace ?? $"{baseNs}.Controllers";
-            var requestNs = requestNamespace ?? controllerNs;
-
-            var requests = new List<string>();
+            var controllerNs = controllerClass.ContainingNamespace.ToDisplayString();
 
             sourceBuilder.AppendLine("using Microsoft.AspNetCore.Mvc;");
             sourceBuilder.AppendLine("using System;");
             sourceBuilder.AppendLine("using System.Threading.Tasks;");
-            if (controllerNs != requestNs)
-            {
-                sourceBuilder.AppendLine($"using {requestNs};");
-            }
             sourceBuilder.AppendLine();
             sourceBuilder.AppendLine("#nullable enable");
             sourceBuilder.AppendLine("#pragma warning disable");
@@ -257,15 +202,13 @@ namespace MicroAPI
             sourceBuilder.AppendLine("{");
             sourceBuilder.AppendLine("    [ApiController]");
             sourceBuilder.AppendLine("    [Route(\"[controller]\")]");
-            sourceBuilder.AppendLine($"    public partial class {controllerName}Controller : ControllerBase");
+            sourceBuilder.AppendLine($"    public partial class {controllerClass.Name} : ControllerBase");
             sourceBuilder.AppendLine("    {");
-            sourceBuilder.AppendLine($"        private readonly {serviceType.ToDisplayString()} _service;");
+            sourceBuilder.AppendLine("        [Microsoft.AspNetCore.Components.Inject]");
+            sourceBuilder.AppendLine($"        private {serviceType.ToDisplayString()} _service {{ get; set; }} = null!;");
             sourceBuilder.AppendLine();
-            sourceBuilder.AppendLine($"        public {controllerName}Controller({serviceType.ToDisplayString()} service)");
-            sourceBuilder.AppendLine("        {");
-            sourceBuilder.AppendLine("            _service = service;");
-            sourceBuilder.AppendLine("        }");
-            sourceBuilder.AppendLine();
+
+            // Generate request DTOs inside the controller class
 
             foreach (var method in methods)
             {
@@ -280,13 +223,12 @@ namespace MicroAPI
                 var isGetMethod = httpMethodAttribute.AttributeClass?.Name == nameof(GetAttribute);
                 var httpMethod = httpMethodAttribute.AttributeClass?.Name.Replace(nameof(Attribute), string.Empty);
 
-
                 // Get custom method name if specified
                 var methodName = method.Name;
                 var methodNameWithoutAsync = methodName.EndsWith(AsyncSuffix) ? methodName.Substring(0, methodName.Length - AsyncSuffix.Length) : methodName;
                 var routePath = methodNameWithoutAsync;
 
-                var customRoutePath = GetConstructorArgument(httpMethodAttribute, 0);
+                var customRoutePath = GeneratorHelper.GetConstructorArgument(httpMethodAttribute, 0);
 
                 if (customRoutePath is not null)
                 {
@@ -319,12 +261,10 @@ namespace MicroAPI
                 // Generate request DTO only if there are non-route parameters and not a GET method
                 if (nonRouteParameters.Count > 0 && !isGetMethod)
                 {
-                    var requestBuilder = new StringBuilder();
-
-                    requestBuilder.Append($"public record {requestName}(");
-                    requestBuilder.Append(string.Join(", ", nonRouteParameters.Select(p => $"{p.Type.ToDisplayString()} {p.Name}")));
-                    requestBuilder.AppendLine(");");
-                    requests.Add(requestBuilder.ToString());
+                    sourceBuilder.Append($"        public record {requestName}(");
+                    sourceBuilder.Append(string.Join(", ", nonRouteParameters.Select(p => $"{p.Type.ToDisplayString()} {GeneratorHelper.ToPascalCase(p.Name)}")));
+                    sourceBuilder.AppendLine(");");
+                    sourceBuilder.AppendLine();
                 }
 
                 // Generate controller method
@@ -358,7 +298,7 @@ namespace MicroAPI
                     if (attribute.ConstructorArguments.Length > 0)
                     {
                         var formattedArgs = attribute.ConstructorArguments
-                            .Select(GeneratorHelper.FormatAttributeArgument)
+                            .Select(GeneratorHelper.FormatArgument)
                             .Where(arg => !string.IsNullOrEmpty(arg))
                             .ToList();
 
@@ -384,7 +324,7 @@ namespace MicroAPI
                         }
 
                         attributeText.Append(string.Join(", ", attribute.NamedArguments
-                            .Select(arg => $"{arg.Key} = {GeneratorHelper.FormatAttributeArgument(arg.Value)}")));
+                            .Select(arg => $"{arg.Key} = {GeneratorHelper.FormatArgument(arg.Value)}")));
 
                         if (attribute.ConstructorArguments.Length == 0)
                         {
@@ -396,7 +336,7 @@ namespace MicroAPI
                     sourceBuilder.AppendLine(attributeText.ToString());
                 }
 
-                sourceBuilder.Append($"        public {returnType} {methodName}(");
+                sourceBuilder.Append($"        public {returnType} {methodName}Facade(");
 
                 // Build method parameters and service call arguments in original order
                 var methodParameters = new List<string>();
@@ -434,7 +374,7 @@ namespace MicroAPI
                             param =>
                                 routeParameters.Contains(param.Name)
                                 ? param.Name
-                                : $"request.{param.Name}"));
+                                : $"request.{GeneratorHelper.ToPascalCase(param.Name)}"));
                 }
 
                 // Add parameters to method signature
@@ -458,30 +398,6 @@ namespace MicroAPI
             sourceBuilder.AppendLine("}");
 
             context.AddSource($"{controllerName}Controller.g.cs", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
-
-            // Add request DTOs
-            // ReSharper disable once InvertIf
-            if (requests.Any())
-            {
-                var requestsBuilder = new StringBuilder();
-
-                requestsBuilder.AppendLine("using System;");
-                requestsBuilder.AppendLine();
-                requestsBuilder.AppendLine("#nullable enable");
-                requestsBuilder.AppendLine("#pragma warning disable");
-                requestsBuilder.AppendLine();
-                requestsBuilder.AppendLine($"namespace {requestNs}");
-                requestsBuilder.AppendLine("{");
-
-                foreach (var request in requests)
-                {
-                    requestsBuilder.AppendLine($"    {request}");
-                }
-
-                requestsBuilder.AppendLine("}");
-
-                context.AddSource($"{controllerName}Requests.g.cs", SourceText.From(requestsBuilder.ToString(), Encoding.UTF8));
-            }
         }
 
         private static void WarnIfHasUnmatchedRouteParam(SourceProductionContext context, HashSet<string> routeParameters,

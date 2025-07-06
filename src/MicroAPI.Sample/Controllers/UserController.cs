@@ -3,10 +3,10 @@ using MicroAPI.Sample.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 
-namespace MicroAPI.Sample.Facades;
+namespace MicroAPI.Sample.Controllers;
 
-[HttpFacade("User")]
-public class UserServiceFacade : IUserService
+[HttpFacade]
+public partial class UserController : IUserService
 {
     [Get("{id}")]
     public Task<User> GetUserAsync(int id) => null!;
