@@ -89,10 +89,6 @@ namespace MicroAPI
                 return;
             }
 
-            var controllerName = controllerClass.Name.EndsWith("Controller") ?
-                               controllerClass.Name.Substring(0, controllerClass.Name.Length - "Controller".Length) :
-                               controllerClass.Name;
-
             var serviceType = GetServiceType(controllerClass, facadeAttribute);
             if (serviceType is null)
             {
@@ -100,7 +96,7 @@ namespace MicroAPI
             }
 
             // Generate the implementation part for the partial controller
-            GeneratePartialControllerImplementation(context, controllerClass, serviceType, controllerName);
+            GeneratePartialControllerImplementation(context, controllerClass, serviceType);
         }
         private static INamedTypeSymbol? GetServiceType(INamedTypeSymbol facadeClass, AttributeData facadeAttribute)
         {
@@ -176,7 +172,7 @@ namespace MicroAPI
         }
 
         private static void GeneratePartialControllerImplementation(SourceProductionContext context, INamedTypeSymbol controllerClass,
-            INamedTypeSymbol serviceType, string controllerName)
+            INamedTypeSymbol serviceType)
         {
             // Get methods from the service interface
             var methods = controllerClass.GetMembers().OfType<IMethodSymbol>()
@@ -204,8 +200,6 @@ namespace MicroAPI
             sourceBuilder.AppendLine("    [Route(\"[controller]\")]");
             sourceBuilder.AppendLine($"    public partial class {controllerClass.Name} : ControllerBase");
             sourceBuilder.AppendLine("    {");
-            sourceBuilder.AppendLine("        [Microsoft.AspNetCore.Components.Inject]");
-            sourceBuilder.AppendLine($"        private {serviceType.ToDisplayString()} _service {{ get; set; }} = null!;");
             sourceBuilder.AppendLine();
 
             // Generate request DTOs inside the controller class
@@ -336,7 +330,7 @@ namespace MicroAPI
                     sourceBuilder.AppendLine(attributeText.ToString());
                 }
 
-                sourceBuilder.Append($"        public {returnType} {methodName}Facade(");
+                sourceBuilder.Append($"        public {returnType} {methodName}Facade([FromServices] {serviceType.ToDisplayString()} service");
 
                 // Build method parameters and service call arguments in original order
                 var methodParameters = new List<string>();
@@ -380,13 +374,13 @@ namespace MicroAPI
                 // Add parameters to method signature
                 if (methodParameters.Count > 0)
                 {
-                    sourceBuilder.AppendLine(string.Join(", ", methodParameters) + ")");
-                    sourceBuilder.AppendLine($"            => _service.{method.Name}({string.Join(", ", serviceCallParameters)});");
+                    sourceBuilder.AppendLine(", " + string.Join(", ", methodParameters) + ")");
+                    sourceBuilder.AppendLine($"            => service.{method.Name}({string.Join(", ", serviceCallParameters)});");
                 }
                 else
                 {
                     sourceBuilder.AppendLine(")");
-                    sourceBuilder.AppendLine($"            => _service.{method.Name}();");
+                    sourceBuilder.AppendLine($"            => service.{method.Name}();");
                 }
 
                 sourceBuilder.AppendLine();
@@ -397,7 +391,7 @@ namespace MicroAPI
 
             sourceBuilder.AppendLine("}");
 
-            context.AddSource($"{controllerName}Controller.g.cs", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
+            context.AddSource($"{controllerClass.Name}.g.cs", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
         }
 
         private static void WarnIfHasUnmatchedRouteParam(SourceProductionContext context, HashSet<string> routeParameters,
