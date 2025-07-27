@@ -69,18 +69,16 @@ public static class GeneratorHelper
                 // Get the base generic type name
                 var genericTypeName = namedType.ConstructedFrom.ToDisplayString().Split('<')[0];
 
+                var isValueNullable = genericTypeName.Contains("Nullable");
+
                 // Process all generic type arguments
-                var processedTypeArgs = new string[typeArgs.Length];
-                for (var i = 0; i < typeArgs.Length; i++)
-                {
-                    processedTypeArgs[i] = GetTypeName(typeArgs[i]);
-                }
+                var processedTypeArgs = typeArgs.Select(GetTypeName).ToList();
 
                 // Combine the generic type with its arguments
                 var result = $"{genericTypeName}<{string.Join(", ", processedTypeArgs)}>";
 
                 // Add nullable annotation if needed
-                return isNullable ? $"{result}?" : result;
+                return isNullable && !isValueNullable ? $"{result}?" : result;
             }
         }
 

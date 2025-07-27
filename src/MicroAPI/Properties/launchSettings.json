@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MicroAPI": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\MicroAPI.Sample\\MicroAPI.Sample.csproj"
+    }
+  }
+}
