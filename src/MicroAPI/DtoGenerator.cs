@@ -190,11 +190,20 @@ namespace MicroAPI
                 .OfType<IPropertySymbol>()
                 .Select(p => p.Name));
 
+            // Check if the entity type is a record
+            bool isRecord = entityType.IsRecord;
+
             // Generate properties from entity, excluding ignored ones and already defined ones
             foreach (var member in entityType.GetMembers().OfType<IPropertySymbol>())
             {
                 // Skip if property is ignored or already defined in the partial class
                 if (ignoredProperties.Contains(member.Name) || existingProperties.Contains(member.Name))
+                {
+                    continue;
+                }
+
+                // Skip EqualityContract property for record types
+                if (isRecord && member.Name == "EqualityContract")
                 {
                     continue;
                 }
@@ -219,6 +228,17 @@ namespace MicroAPI
                         ignoredAttributes.Any(ignored => IsAttributeOfTypeOrDerivedFrom(attribute.AttributeClass, ignored)))
                     {
                         continue;
+                    }
+                    
+                    // Skip compiler-generated attributes for record types
+                    if (isRecord && attribute.AttributeClass != null)
+                    {
+                        var attributeFullName = attribute.AttributeClass.ToDisplayString();
+                        if (attributeFullName.Contains("System.Runtime.CompilerServices.Nullable") ||
+                            attributeFullName.Contains("System.Runtime.CompilerServices.CompilerGenerated"))
+                        {
+                            continue;
+                        }
                     }
 
                     // Generate the attribute with its parameters using fully qualified name
