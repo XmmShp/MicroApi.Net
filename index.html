@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>MicroAPI.Net | MicroAPI.Net </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="MicroAPI.Net | MicroAPI.Net ">
+    
+    
+      <link rel="shortcut icon" href="favicon.ico">
+      <link rel="stylesheet" href="styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="styles/docfx.css">
+      <link rel="stylesheet" href="styles/main.css">
+      <meta property="docfx:navrel" content="toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="">
+    <meta property="docfx:newtab" content="true">
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="index.html">
+                <img id="logo" class="svg" src="logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="article row grid">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="microapinet">MicroAPI.Net</h1>
+
+<p><a href="https://www.nuget.org/packages/MicroAPI.Net/"><img src="https://img.shields.io/nuget/v/MicroAPI.Net.svg" alt="NuGet"></a>
+<a href="https://github.com/XmmShp/MicroAPI.Net/actions/workflows/ci.yml"><img src="https://github.com/XmmShp/MicroAPI.Net/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></p>
+<p><em>Read this in other languages: <a href="README-zh-cn.html">简体中文</a></em></p>
+<p>MicroAPI.Net is a lightweight .NET source generator that automatically creates ASP.NET Core controllers from interfaces and facade classes. With simple attribute annotations, you can quickly build RESTful APIs without writing repetitive controller code.</p>
+<h2 id="features">Features</h2>
+<ul>
+<li>🚀 <strong>Zero Boilerplate</strong> - Automatically generate controllers from interfaces or facade classes</li>
+<li>🔄 <strong>Compile-time Generation</strong> - Generate code at compile time with no runtime overhead</li>
+<li>🛠️ <strong>Highly Configurable</strong> - Customize controller names, routes, and namespaces</li>
+<li>📦 <strong>Lightweight</strong> - Minimal dependencies, focused on a single responsibility</li>
+<li>🔍 <strong>Type-safe</strong> - Leverage compile-time type checking for API consistency</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<p>Install via NuGet Package Manager:</p>
+<pre><code class="lang-bash">dotnet add package MicroAPI.Net
+</code></pre>
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="1-create-a-service-interface">1. Create a Service Interface</h3>
+<pre><code class="lang-csharp">public interface IUserService
+{
+    Task&lt;User&gt; GetUserAsync(int id);
+    Task&lt;List&lt;User&gt;&gt; GetAllUsersAsync();
+    Task&lt;User&gt; CreateUserAsync(string name, int age);
+    Task&lt;bool&gt; DeleteUserAsync(int id);
+}
+</code></pre>
+<h3 id="2-implement-the-service">2. Implement the Service</h3>
+<pre><code class="lang-csharp">public class UserService : IUserService
+{
+    // Implement interface methods
+}
+</code></pre>
+<h3 id="3-create-a-facade-class-or-use-interface-annotations">3. Create a Facade Class or Use Interface Annotations</h3>
+<p><strong>Option 1: Using a Facade Class</strong></p>
+<pre><code class="lang-csharp">[HttpFacade(&quot;User&quot;)]
+public class UserServiceFacade : IUserService
+{
+    [Get(&quot;{id}&quot;)]
+    public Task&lt;User&gt; GetUserAsync(int id) =&gt; null!;
+
+    [Get(&quot;&quot;)]
+    public Task&lt;List&lt;User&gt;&gt; GetAllUsersAsync() =&gt; null!;
+
+    [Post]
+    public Task&lt;User&gt; CreateUserAsync(string name, int age) =&gt; null!;
+
+    [Delete(&quot;{id}&quot;, MethodName = &quot;MyDeleteUser&quot;)]
+    public bool DeleteUser(int id) =&gt; false;
+
+    public void Debug() { }
+}
+</code></pre>
+<p>Generated code:</p>
+<pre><code class="lang-csharp">// UserController.g.cs
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
+
+namespace MicroAPI.Sample.Facades.Controllers
+{
+    [ApiController]
+    [Route(&quot;[controller]&quot;)]
+    public class UserController : ControllerBase
+    {
+        private readonly MicroAPI.Sample.Services.IUserService _service;
+
+        public UserController(MicroAPI.Sample.Services.IUserService service)
+        {
+            _service = service;
+        }
+
+        [HttpGet(&quot;{id}&quot;)]
+        public System.Threading.Tasks.Task&lt;MicroAPI.Sample.Models.User&gt; GetUserAsync([FromRoute] int id)
+            =&gt; _service.GetUserAsync(id);
+
+        [HttpGet(&quot;&quot;)]
+        public System.Threading.Tasks.Task&lt;System.Collections.Generic.List&lt;MicroAPI.Sample.Models.User&gt;&gt; GetAllUsersAsync()
+            =&gt; _service.GetAllUsersAsync();
+
+        [HttpPost(&quot;CreateUserAsync&quot;)]
+        public System.Threading.Tasks.Task&lt;MicroAPI.Sample.Models.User&gt; CreateUserAsync([FromBody] CreateUserAsyncRequest request)
+            =&gt; _service.CreateUserAsync(request.name, request.age);
+
+        [HttpDelete(&quot;{id}&quot;)]
+        public bool MyDeleteUser([FromRoute] int id)
+            =&gt; _service.DeleteUser(id);
+
+    }
+}
+
+// UserDtos.g.cs
+using System;
+
+namespace MicroAPI.Sample.Facades.Controllers
+{
+    public record CreateUserAsyncRequest(string name, int age);
+
+}
+</code></pre>
+<p><strong>Option 2: Using an Interface</strong></p>
+<pre><code class="lang-csharp">[HttpFacade(DtoNamespace = &quot;MyApp.Api.Models&quot;)]
+public interface IUserService
+{
+    [Get(&quot;{id}&quot;)]
+    Task&lt;User&gt; GetUserAsync(int id);
+
+    [Get(&quot;&quot;)]
+    Task&lt;List&lt;User&gt;&gt; GetAllUsersAsync();
+
+    [Post]
+    Task&lt;User&gt; CreateUserAsync(string name, int age);
+
+    [Delete(&quot;{id}&quot;, MethodName = &quot;MyDeleteUser&quot;)]
+    bool DeleteUser(int id);
+
+    void Debug();
+}
+</code></pre>
+<p>Generated code:</p>
+<pre><code class="lang-csharp">// UserServiceController.g.cs
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
+using MyApp.Api.Models;
+
+namespace MicroAPI.Sample.Services.Controllers
+{
+    [ApiController]
+    [Route(&quot;[controller]&quot;)]
+    public class UserServiceController : ControllerBase
+    {
+        private readonly MicroAPI.Sample.Services.IUserService _service;
+
+        public UserServiceController(MicroAPI.Sample.Services.IUserService service)
+        {
+            _service = service;
+        }
+
+        [HttpGet(&quot;{id}&quot;)]
+        public System.Threading.Tasks.Task&lt;MicroAPI.Sample.Models.User&gt; GetUserAsync([FromRoute] int id)
+            =&gt; _service.GetUserAsync(id);
+
+        [HttpGet(&quot;&quot;)]
+        public System.Threading.Tasks.Task&lt;System.Collections.Generic.List&lt;MicroAPI.Sample.Models.User&gt;&gt; GetAllUsersAsync()
+            =&gt; _service.GetAllUsersAsync();
+
+        [HttpPost(&quot;CreateUserAsync&quot;)]
+        public System.Threading.Tasks.Task&lt;MicroAPI.Sample.Models.User&gt; CreateUserAsync([FromBody] CreateUserAsyncRequest request)
+            =&gt; _service.CreateUserAsync(request.name, request.age);
+
+        [HttpDelete(&quot;{id}&quot;)]
+        public bool MyDeleteUser([FromRoute] int id)
+            =&gt; _service.DeleteUser(id);
+
+    }
+
+}
+
+// UserServiceDtos.g.cs
+using System;
+
+namespace MyApp.Api.Models
+{
+    public record CreateUserAsyncRequest(string name, int age);
+
+}
+</code></pre>
+<h2 id="advanced-configuration">Advanced Configuration</h2>
+<h3 id="custom-controller-name">Custom Controller Name</h3>
+<pre><code class="lang-csharp">[HttpFacade(&quot;CustomName&quot;)]
+public interface IUserService { ... }
+</code></pre>
+<h3 id="custom-namespaces">Custom Namespaces</h3>
+<pre><code class="lang-csharp">[HttpFacade(ControllerNamespace = &quot;MyApp.Api.Controllers&quot;, DtoNamespace = &quot;MyApp.Api.Models&quot;)]
+public interface IUserService { ... }
+</code></pre>
+<h3 id="custom-method-name">Custom Method Name</h3>
+<pre><code class="lang-csharp">[Get(MethodName = &quot;FindById&quot;)]
+Task&lt;User&gt; GetUserAsync(int id);
+</code></pre>
+<h2 id="background-and-motivation">Background and Motivation</h2>
+<p>With the rise of microservices, Domain-Driven Design (DDD), and similar architectures, Controller layers have become increasingly thin. In some microservice clusters, unified gateways and middleware handle responses. In these systems, each endpoint often simply forwards requests to a Service, no longer strictly following RESTful conventions or fully utilizing HttpStatusCode semantics. In fact, HttpStatusCode semantics are often insufficient to express rich business scenarios, making these APIs more like WebRPC.</p>
+<p>MicroAPI.Net was created to address these challenges in ASP.NET Core API development:</p>
+<ol>
+<li><p><strong>Repetitive Controller Code</strong>: Traditional API controllers often contain significant boilerplate code that merely forwards requests to the service layer.</p>
+</li>
+<li><p><strong>Separation of Concerns</strong>: Maintaining a clear separation between API contracts and business logic implementation is challenging with standard controller patterns.</p>
+</li>
+<li><p><strong>API Consistency</strong>: Ensuring consistent API design across multiple controllers and endpoints is difficult without standardized approaches.</p>
+</li>
+<li><p><strong>Maintenance Cost</strong>: Changes to service interfaces typically require corresponding controller code changes, potentially leading to inconsistencies.</p>
+</li>
+</ol>
+<p>MicroAPI.Net addresses these issues by automatically generating controller code from service interfaces or facade classes, ensuring the API layer accurately reflects service contracts while eliminating boilerplate code.</p>
+<h2 id="contributing">Contributing</h2>
+<p>Contributions are welcome! Please see the <a href="CONTRIBUTING.html">Contributing Guidelines</a> for details.</p>
+<h2 id="license">License</h2>
+<p>This project is licensed under the MIT License - see the <a href="LICENSE">LICENSE</a> file for details.</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/XmmShp/MicroApi.Net/blob/main/docs/index.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      MicroAPI.Net Documentation
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="styles/docfx.js"></script>
+    <script type="text/javascript" src="styles/main.js"></script>
+  </body>
+</html>

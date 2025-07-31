@@ -1,0 +1,291 @@
+{
+  "source_base_path": "/home/runner/work/MicroApi.Net/MicroApi.Net/docs",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "Resource",
+      "output": {
+        "resource": {
+          "relative_path": "index.json"
+        }
+      }
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "CONTRIBUTING.md",
+      "output": {
+        ".html": {
+          "relative_path": "CONTRIBUTING.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "README-zh-cn.md",
+      "output": {
+        ".html": {
+          "relative_path": "README-zh-cn.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "README.md",
+      "output": {
+        ".html": {
+          "relative_path": "README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.ControllerGenerator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.ControllerGenerator.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.ControllerGenerator",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.DeleteAttribute.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.DeleteAttribute.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.DeleteAttribute",
+      "Summary": "<p sourcefile=\"api/MicroAPI.DeleteAttribute.yml\" sourcestartlinenumber=\"1\">Marks a method to be exposed as an HTTP DELETE endpoint.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.DtoAttribute-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.DtoAttribute-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.DtoAttribute<TEntity>",
+      "Summary": "<p sourcefile=\"api/MicroAPI.DtoAttribute-1.yml\" sourcestartlinenumber=\"1\">Marks a class as a Data Transfer Object (Dto) and specifies the entity type it maps to.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.DtoAttribute.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.DtoAttribute.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.DtoAttribute",
+      "Summary": "<p sourcefile=\"api/MicroAPI.DtoAttribute.yml\" sourcestartlinenumber=\"1\">Marks a class as a Data Transfer Object (Dto) and specifies the entity type it maps to.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.DtoGenerator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.DtoGenerator.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.DtoGenerator",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.GeneratorHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.GeneratorHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.GeneratorHelper",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.GetAttribute.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.GetAttribute.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.GetAttribute",
+      "Summary": "<p sourcefile=\"api/MicroAPI.GetAttribute.yml\" sourcestartlinenumber=\"1\">Marks a method to be exposed as an HTTP GET endpoint.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.HttpFacadeAttribute-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.HttpFacadeAttribute-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.HttpFacadeAttribute<TService>",
+      "Summary": "<p sourcefile=\"api/MicroAPI.HttpFacadeAttribute-1.yml\" sourcestartlinenumber=\"1\">Marks a class or interface for generating a controller.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.HttpFacadeAttribute.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.HttpFacadeAttribute.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.HttpFacadeAttribute",
+      "Summary": "<p sourcefile=\"api/MicroAPI.HttpFacadeAttribute.yml\" sourcestartlinenumber=\"1\">Marks a class or interface for generating a controller.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.HttpMethodAttributeBase.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.HttpMethodAttributeBase.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.HttpMethodAttributeBase",
+      "Summary": "<p sourcefile=\"api/MicroAPI.HttpMethodAttributeBase.yml\" sourcestartlinenumber=\"1\">Base class for HTTP method attributes.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.PatchAttribute.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.PatchAttribute.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.PatchAttribute",
+      "Summary": "<p sourcefile=\"api/MicroAPI.PatchAttribute.yml\" sourcestartlinenumber=\"1\">Marks a method to be exposed as an HTTP PATCH endpoint.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.PostAttribute.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.PostAttribute.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.PostAttribute",
+      "Summary": "<p sourcefile=\"api/MicroAPI.PostAttribute.yml\" sourcestartlinenumber=\"1\">Marks a method to be exposed as an HTTP POST endpoint.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.PutAttribute.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.PutAttribute.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI.PutAttribute",
+      "Summary": "<p sourcefile=\"api/MicroAPI.PutAttribute.yml\" sourcestartlinenumber=\"1\">Marks a method to be exposed as an HTTP PUT endpoint.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MicroAPI.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MicroAPI.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MicroAPI",
+      "Summary": null
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "api/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "api/index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "api/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "index.md",
+      "output": {
+        ".html": {
+          "relative_path": "index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "toc.html"
+        },
+        ".json": {
+          "relative_path": "toc.json"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}
