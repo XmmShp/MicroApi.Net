@@ -229,13 +229,12 @@ namespace MicroAPI
                     {
                         continue;
                     }
-                    
-                    // Skip compiler-generated attributes for record types
-                    if (isRecord && attribute.AttributeClass != null)
+
+                    // Skip compiler-generated attributes
+                    if (attribute.AttributeClass != null)
                     {
                         var attributeFullName = attribute.AttributeClass.ToDisplayString();
-                        if (attributeFullName.Contains("System.Runtime.CompilerServices.Nullable") ||
-                            attributeFullName.Contains("System.Runtime.CompilerServices.CompilerGenerated"))
+                        if (attributeFullName.Contains("System.Runtime.CompilerServices"))
                         {
                             continue;
                         }
