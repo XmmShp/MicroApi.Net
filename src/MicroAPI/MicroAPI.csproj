@@ -11,7 +11,7 @@
 
   <PropertyGroup>
     <PackageId>MicroAPI.Net</PackageId>
-    <Version>2.0.3.14</Version>
+    <Version>2.0.4.15</Version>
     <Authors>MicroAPI Contributors</Authors>
     <Description>A lightweight source generator for ASP.NET Core controllers from interfaces and facades</Description>
     <PackageTags>sourcegenerator;aspnetcore;controllers;api</PackageTags>
